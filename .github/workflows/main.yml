@@ -1,5 +1,6 @@
 name: Run Robot Framework Tests
 
+# Tento workflow bude spuštěn při každém pushi nebo pull requestu na hlavní větev
 on:
   push:
     branches:
@@ -13,29 +14,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout repozitář s testy
       - name: Checkout repository
         uses: actions/checkout@v3
 
+      # Nastavení Docker Buildx (pro možnost buildování image)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      # Nastavení cache pro Docker vrstvy
-      - name: Cache Docker layers
-        uses: actions/cache@v3
-        with:
-          path: /tmp/.buildx-cache
-          key: ${{ runner.os }}-buildx-${{ github.sha }}
-          restore-keys: |
-            ${{ runner.os }}-buildx-
-
-      # Aktivace BuildKitu a build image s cache
+      # Build Docker image
       - name: Build Docker image
-        run: |
-          DOCKER_BUILDKIT=1 docker build --cache-from=type=local,src=/tmp/.buildx-cache --cache-to=type=local,dest=/tmp/.buildx-cache -t robotframework-test .
+        run: docker build -t robotframework-test .
 
+      # Spuštění testů v Dockeru
       - name: Run Robot Framework tests
         run: docker run -v ${{ github.workspace }}/results:/robotframework/results robotframework-test
 
+      # Nahrát výsledky testů jako artefakty
       - name: Upload test results
         uses: actions/upload-artifact@v3
         with:
