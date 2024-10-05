@@ -1,0 +1,8 @@
+version: "3"
+services:
+  robotframework:
+    image: robotframework-test
+    volumes:
+      - ./tests:/robotframework/tests
+      - ./results:/robotframework/results
+    command: robot --outputdir results tests/

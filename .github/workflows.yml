@@ -1,0 +1,38 @@
+name: Run Robot Framework Tests
+
+# Tento workflow bude spuštěn při každém pushi nebo pull requestu na hlavní větev
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  robot-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout repozitář s testy
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Nastavení Docker Buildx (pro možnost buildování image)
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      # Build Docker image
+      - name: Build Docker image
+        run: docker build -t robotframework-test .
+
+      # Spuštění testů v Dockeru
+      - name: Run Robot Framework tests
+        run: docker run -v ${{ github.workspace }}/results:/robotframework/results robotframework-test
+
+      # Nahrát výsledky testů jako artefakty
+      - name: Upload test results
+        uses: actions/upload-artifact@v3
+        with:
+          name: robot-framework-results
+          path: results/
